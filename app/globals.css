@@ -87,14 +87,18 @@ body {
   cursor: pointer;
 }
 
-.brutal-btn:hover {
+.brutal-btn:hover:not(:disabled) {
   transform: translate(-2px, -2px);
   box-shadow: 8px 8px 0px #1A1A2E;
 }
 
-.brutal-btn:active {
+.brutal-btn:active:not(:disabled) {
   transform: translate(4px, 4px);
   box-shadow: 2px 2px 0px #1A1A2E;
+}
+
+.brutal-btn:disabled {
+  cursor: not-allowed;
 }
 
 /* 네오 브루탈리즘 인풋 */
