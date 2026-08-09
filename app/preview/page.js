@@ -1,0 +1,214 @@
+"use client";
+
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { generateInitialCode } from "@/lib/codeGenerator";
+import { generateManifest, generateServiceWorker, generateIconSvg } from "@/lib/pwaGenerator";
+import { supabase } from "@/lib/supabase";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import PreviewFrame from "@/components/PreviewFrame";
+import ChatPanel from "@/components/ChatPanel";
+
+function PreviewContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [code, setCode] = useState("");
+  const [finalUrl, setFinalUrl] = useState("");
+  const [isSubmittingUrl, setIsSubmittingUrl] = useState(false);
+  const [urlSubmitted, setUrlSubmitted] = useState(false);
+
+  useEffect(() => {
+    // 쿼리 파라미터에서 데이터 추출
+    const businessName = searchParams.get("name") || "";
+    const product = searchParams.get("product") || "";
+    const targetCustomer = searchParams.get("customer") || "";
+    const brandColor = searchParams.get("color") || "yellow";
+
+    // 데이터가 아예 없으면 메인으로 튕겨냄
+    if (!businessName && !product) {
+      router.push("/");
+      return;
+    }
+
+    // 코드 생성 엔진 호출
+    const initialCode = generateInitialCode({
+      businessName,
+      product,
+      targetCustomer,
+      brandColor
+    });
+
+    setCode(initialCode);
+
+    // 관제탑에 "제작중" 시작 기록 (4문항 입력 후 미리보기 화면 도달 시점)
+    const studentId = searchParams.get("studentId");
+    if (studentId) {
+      supabase
+        .from("students")
+        .update({ preview_started: true, updated_at: new Date().toISOString() })
+        .eq("id", studentId)
+        .then(() => {});
+    }
+  }, [searchParams, router]);
+
+  // AI 채팅을 통해 코드가 '수정'되는 것을 흉내내는 임시 함수
+  const handleUpdateCode = (userInput) => {
+    let updatedCode = code;
+    const text = userInput.replace(/\s+/g, ""); // 공백 제거 후 검사
+    
+    // 1. 색상 변경 시연 (조건 완화: '빨', '파', '초' 한 글자만 포함돼도 매칭)
+    if (text.includes("파란") || text.includes("파랑") || text.includes("블루") || text.includes("파랗")) {
+      updatedCode = updatedCode.replace(/--theme-color:\s*#[^;]+;/, "--theme-color: #6EC6FF;");
+    } else if (text.includes("빨간") || text.includes("빨강") || text.includes("레드") || text.includes("핑크") || text.includes("빨갛")) {
+      updatedCode = updatedCode.replace(/--theme-color:\s*#[^;]+;/, "--theme-color: #FF6B9D;");
+    } else if (text.includes("초록") || text.includes("그린")) {
+      updatedCode = updatedCode.replace(/--theme-color:\s*#[^;]+;/, "--theme-color: #7BED9F;");
+    } else if (text.includes("노란") || text.includes("노랑") || text.includes("옐로우") || text.includes("노랗")) {
+      updatedCode = updatedCode.replace(/--theme-color:\s*#[^;]+;/, "--theme-color: #FFE156;");
+    }
+
+    // 2. 색상이 안 바뀌면 제목에 텍스트를 추가해서 수정된 척 함
+    if (updatedCode === code) {
+      updatedCode = updatedCode.replace(
+        /<h2>우주에서 제일 맛있는/,
+        "<h2>✨ AI가 뚝딱 수정한 ✨<br/>우주에서 제일 맛있는"
+      );
+    }
+
+    setCode(updatedCode);
+  };
+
+  // 최종 배포 URL 제출: 강사 관제탑에 실시간으로 반영됨
+  const handleSubmitFinalUrl = async (e) => {
+    e.preventDefault();
+    const studentId = searchParams.get("studentId");
+    if (!finalUrl.trim() || !studentId) return;
+
+    setIsSubmittingUrl(true);
+    try {
+      await supabase
+        .from("students")
+        .update({ final_url: finalUrl.trim(), updated_at: new Date().toISOString() })
+        .eq("id", studentId);
+      setUrlSubmitted(true);
+    } catch (err) {
+      // Supabase 연동이 안 되어 있어도 수업 흐름은 막지 않음
+      setUrlSubmitted(true);
+    } finally {
+      setIsSubmittingUrl(false);
+    }
+  };
+
+  // ZIP 파일 패키징 및 다운로드
+  const handleDownload = () => {
+    const businessName = searchParams.get("name") || "비즈니스앱";
+    const brandColor = searchParams.get("color") || "yellow";
+    const studentId = searchParams.get("studentId");
+
+    // 색상 매핑
+    const colorMap = { yellow: "#FFE156", pink: "#FF6B9D", blue: "#6EC6FF", green: "#7BED9F" };
+    const themeColor = colorMap[brandColor] || "#FFE156";
+
+    // PWA용 파일 생성
+    const manifest = generateManifest({ businessName, themeColor });
+    const sw = generateServiceWorker();
+    const icon = generateIconSvg({ businessName, themeColor });
+
+    // JSZip으로 압축
+    const zip = new JSZip();
+    zip.file("index.html", code); // 현재 우측에 렌더링되고 있는 코드
+    zip.file("manifest.json", manifest);
+    zip.file("service-worker.js", sw);
+    zip.file("icon.svg", icon);
+
+    // ZIP 다운로드
+    zip.generateAsync({ type: "blob" }).then((content) => {
+      saveAs(content, `${businessName}_PWA.zip`);
+    });
+
+    // 관제탑에 다운로드 완료 기록
+    if (studentId) {
+      supabase
+        .from("students")
+        .update({ pwa_downloaded: true, updated_at: new Date().toISOString() })
+        .eq("id", studentId)
+        .then(() => {});
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-brutal-cream flex flex-col">
+      {/* 상단 네비게이션 */}
+      <header className="bg-brutal-white border-b-4 border-brutal-black p-4 flex items-center justify-between z-10">
+        <h1 className="text-2xl font-black cursor-pointer" onClick={() => router.push("/")}>
+          🚀 Antigravity <span className="text-sm text-brutal-black/50 ml-2">우주선 건조소</span>
+        </h1>
+        <button 
+          onClick={handleDownload}
+          className="brutal-btn bg-brutal-green px-6 py-2 text-sm md:text-base font-bold whitespace-nowrap"
+        >
+          📦 PWA 패키징 다운로드
+        </button>
+      </header>
+
+      {/* 최종 배포 URL 제출: Netlify 재배포까지 마친 뒤 여기로 돌아와 제출 */}
+      <div className="bg-brutal-blue border-b-4 border-brutal-black px-4 py-3">
+        {urlSubmitted ? (
+          <p className="font-black text-sm md:text-base">✅ 제출 완료! 강사님 관제탑에 반영됩니다 🎉</p>
+        ) : (
+          <form onSubmit={handleSubmitFinalUrl} className="flex flex-col md:flex-row gap-2 md:items-center">
+            <span className="font-black text-sm md:text-base whitespace-nowrap">
+              🏁 Antigravity 수정 + 재배포까지 끝냈다면, 최종 URL을 알려주세요:
+            </span>
+            <input
+              type="url"
+              required
+              value={finalUrl}
+              onChange={(e) => setFinalUrl(e.target.value)}
+              placeholder="https://내앱이름.netlify.app"
+              className="brutal-input flex-1 px-3 py-2 text-sm font-semibold"
+            />
+            <button
+              type="submit"
+              disabled={isSubmittingUrl}
+              className="brutal-btn bg-brutal-black text-brutal-white px-6 py-2 text-sm font-bold whitespace-nowrap disabled:opacity-50"
+            >
+              {isSubmittingUrl ? "제출 중..." : "제출"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* 메인 레이아웃: 좌측 채팅창(40%) / 우측 프리뷰(60%) */}
+      <main className="flex-1 flex flex-col md:flex-row p-4 gap-6 overflow-hidden">
+        {/* 좌측 패널 */}
+        <div className="w-full md:w-[40%] flex flex-col h-[calc(100vh-100px)]">
+          <ChatPanel 
+            onUpdateCode={handleUpdateCode} 
+            initialData={{
+              name: searchParams.get("name") || "",
+              product: searchParams.get("product") || "",
+              customer: searchParams.get("customer") || "",
+              color: searchParams.get("color") || ""
+            }}
+          />
+        </div>
+
+        {/* 우측 패널 */}
+        <div className="w-full md:w-[60%] flex flex-col h-[calc(100vh-100px)] animate-slide-in-right bg-brutal-white">
+          <PreviewFrame code={code} />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function PreviewPage() {
+  return (
+    <Suspense fallback={<div className="p-10 font-black text-2xl">우주선 불러오는 중... 🚀</div>}>
+      <PreviewContent />
+    </Suspense>
+  );
+}
