@@ -87,7 +87,7 @@ export default function ChatPanel({ onUpdateCode, initialData }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="예: 버튼을 파란색으로 바꿔줘"
+          placeholder="체험판이라 실제로 잘 수정되지 않습니다!"
           className="flex-1 brutal-input px-5 py-5 text-xl md:text-2xl font-black placeholder:text-brutal-black/40"
         />
         <button 

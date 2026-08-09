@@ -14,6 +14,7 @@ function hasProgress(student) {
   return Boolean(
     student.antigravity_installed ||
       student.netlify_signed_up ||
+      student.folder_created ||
       student.preview_started ||
       student.pwa_downloaded ||
       student.final_url
@@ -159,7 +160,7 @@ export default function Home() {
             {isLoading ? (
               <p>명단 불러오는 중...</p>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {students.map((student) => {
                   const isDisabled = student.is_active === false;
                   return (
@@ -210,7 +211,17 @@ export default function Home() {
           <GateStep
             guide={setupGuides.netlify}
             isConfirming={isConfirmingGate}
-            onConfirm={() => handleGateConfirm("netlify_signed_up", "done")}
+            onConfirm={() => handleGateConfirm("netlify_signed_up", "folder")}
+          />
+        </main>
+      )}
+
+      {currentStep === 0 && gateStep === "folder" && (
+        <main className="mt-10 px-4">
+          <GateStep
+            guide={setupGuides.folder}
+            isConfirming={isConfirmingGate}
+            onConfirm={() => handleGateConfirm("folder_created", "done")}
           />
         </main>
       )}

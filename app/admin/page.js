@@ -8,6 +8,7 @@ function getStages(student) {
   return [
     { label: "설치", done: !!student.antigravity_installed },
     { label: "가입", done: !!student.netlify_signed_up },
+    { label: "폴더", done: !!student.folder_created },
     { label: "제작중", done: !!student.preview_started },
     { label: "다운로드", done: !!student.pwa_downloaded },
     { label: "최종 제출", done: !!student.final_url },
@@ -69,10 +70,18 @@ export default function AdminPage() {
 
   // 로그인 세션 확인 및 변경 감지
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setIsAuthChecked(true);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session);
+      })
+      .catch((err) => {
+        console.error("세션 확인 실패:", err);
+        setSession(null);
+      })
+      .finally(() => {
+        setIsAuthChecked(true);
+      });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
@@ -215,7 +224,7 @@ export default function AdminPage() {
                       return (
                         <span
                           key={stage.label}
-                          className={`w-32 shrink-0 text-center text-sm font-black px-2 py-3 border-2 border-brutal-black whitespace-nowrap ${
+                          className={`w-28 shrink-0 text-center text-sm font-black px-2 py-3 border-2 border-brutal-black whitespace-nowrap ${
                             stage.done
                               ? "bg-brutal-green"
                               : isCurrent
