@@ -8,9 +8,10 @@ const outfit = Outfit({
 
 // 메타데이터: SEO 기본 설정
 export const metadata = {
-  title: "Claude Code 🚀 강의 로드맵",
-  description: "AI제조혁신 코디네이터/마이스터 과정의 강의 전체 로드맵입니다.",
-  keywords: ["강의", "커리큘럼", "로드맵", "AI"],
+  title: "Antigravity 🚀 스타트업 대시보드",
+  description:
+    "아이디어를 입력하면 AI가 나만의 비즈니스 앱을 자동으로 만들어 드립니다. 2시간 완성 비즈니스 앱 관제탑.",
+  keywords: ["스타트업", "대시보드", "PWA", "AI", "웹앱 생성기"],
 };
 
 // 전역 레이아웃: 모든 페이지에 공통 적용
