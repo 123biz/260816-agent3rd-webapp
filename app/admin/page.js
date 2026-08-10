@@ -3,16 +3,106 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
+// 단계 정의 (컬럼명 ↔ 라벨). 학생별 상세 뱃지와 전체 통계 대시보드가 공유한다.
+const STAGE_DEFS = [
+  { key: "antigravity_installed", label: "설치" },
+  { key: "netlify_signed_up", label: "가입" },
+  { key: "folder_created", label: "폴더" },
+  { key: "preview_started", label: "제작중" },
+  { key: "pwa_downloaded", label: "다운로드" },
+  { key: "final_url", label: "최종 제출" },
+];
+
 // 학생 데이터로부터 단계별 완료 여부를 계산 (별도 stage 컬럼 없이 파생)
 function getStages(student) {
-  return [
-    { label: "설치", done: !!student.antigravity_installed },
-    { label: "가입", done: !!student.netlify_signed_up },
-    { label: "폴더", done: !!student.folder_created },
-    { label: "제작중", done: !!student.preview_started },
-    { label: "다운로드", done: !!student.pwa_downloaded },
-    { label: "최종 제출", done: !!student.final_url },
-  ];
+  return STAGE_DEFS.map((stage) => ({ label: stage.label, done: !!student[stage.key] }));
+}
+
+// 초기화 버튼을 누르면 되돌아가는 값들: 진행 단계 플래그 + 4문항 저장값. is_active(활성 상태)는 건드리지 않는다.
+const RESET_STUDENT_FIELDS = {
+  antigravity_installed: false,
+  netlify_signed_up: false,
+  folder_created: false,
+  preview_started: false,
+  pwa_downloaded: false,
+  final_url: null,
+  business_name: null,
+  product: null,
+  target_customer: null,
+  brand_color: null,
+};
+
+// 링 차트 반지름(바깥 = 설치 ~ 안쪽 = 최종 제출)과 무지개 배색
+const RING_RADII = [44, 37, 30, 23, 16, 9];
+const RING_COLORS = [
+  "var(--color-brutal-red)",
+  "var(--color-brutal-orange)",
+  "var(--color-brutal-yellow)",
+  "var(--color-brutal-green)",
+  "var(--color-brutal-blue)",
+  "var(--color-brutal-purple)",
+];
+
+// 전체 수강생 기준, 각 단계를 완료한 인원 수/비율로 진행 현황을 보여주는 대시보드
+function StageDashboard({ students }) {
+  const total = students.length;
+
+  // 링 차트와 막대그래프가 같은 통계를 공유한다.
+  const stageStats = STAGE_DEFS.map((stage) => {
+    const done = students.filter((s) => !!s[stage.key]).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { ...stage, done, pct };
+  });
+
+  // 수강생 행의 이름 칸도 동일한 w-40으로 고정했기 때문에(원래는 텍스트 길이만큼 늘어나는 가변폭이었음),
+  // 여기서 같은 폭(이름 칸 w-40 + mr-5, 단계 칸 w-28, gap-3)의 스페이서를 써야 막대가 배지와 정확히 정렬된다.
+  return (
+    <div className="brutal-card bg-brutal-white p-5 mb-8 overflow-x-auto">
+      <h2 className="text-xl font-black mb-6">📊 전체 진행 현황</h2>
+      <div className="flex items-end gap-3 h-48 border-b-4 border-brutal-black">
+        <div className="w-40 mr-5 shrink-0 self-center flex justify-center">
+          {/* 설치(바깥) → 최종 제출(안쪽) 순 6겹 링. 각 링은 실제 완료 비율만큼만 무지개색으로 채워지고,
+              나머지는 회색 트랙(=100%)으로 남는다. -rotate-90으로 12시 방향에서 시작한다. */}
+          <svg viewBox="0 0 100 100" className="w-36 h-36 -rotate-90" aria-hidden="true">
+            {stageStats.map((stage, idx) => {
+              const r = RING_RADII[idx];
+              const circumference = 2 * Math.PI * r;
+              const filled = (stage.pct / 100) * circumference;
+              return (
+                <g key={stage.key}>
+                  <circle cx="50" cy="50" r={r} fill="none" stroke="var(--color-brutal-gray)" strokeWidth="7" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={r}
+                    fill="none"
+                    stroke={RING_COLORS[idx]}
+                    strokeWidth="7"
+                    strokeDasharray={`${filled} ${circumference - filled}`}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+        {stageStats.map((stage) => (
+          <div key={stage.key} className="w-28 shrink-0 h-full flex flex-col items-center">
+            <span className="font-black text-xs mb-1 whitespace-nowrap">
+              {stage.done}/{total} ({stage.pct}%)
+            </span>
+            {/* 회색 트랙 = 전체 인원(100%), 초록 채움 = 해당 단계 완료 인원 */}
+            <div className="relative w-full flex-1">
+              <div className="absolute inset-0 bg-brutal-gray" />
+              <div
+                className="absolute bottom-0 left-0 w-full bg-brutal-green border-2 border-b-0 border-brutal-black transition-all duration-300"
+                style={{ height: `${Math.max(stage.pct, 2)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function LoginForm({ onSubmit, error, isSubmitting }) {
@@ -165,6 +255,31 @@ export default function AdminPage() {
     }
   };
 
+  // 진행 상황을 초기 상태로 되돌린다 (설치/가입/폴더/제작중/다운로드/최종 제출 + 저장된 4문항 입력값 삭제)
+  const resetStudent = async (student) => {
+    const confirmed = window.confirm(
+      `${student.name}님의 진행 상황을 초기 상태로 되돌릴까요?\n설치/가입/폴더/제작중/다운로드/최종 제출 기록이 모두 지워지며 되돌릴 수 없습니다.`
+    );
+    if (!confirmed) return;
+
+    const previous = student;
+
+    // 낙관적 업데이트: Realtime 신호를 기다리지 않고 클릭 즉시 화면에 반영
+    setStudents((prev) =>
+      prev.map((s) => (s.id === student.id ? { ...s, ...RESET_STUDENT_FIELDS } : s))
+    );
+
+    const { error } = await supabase
+      .from("students")
+      .update({ ...RESET_STUDENT_FIELDS, updated_at: new Date().toISOString() })
+      .eq("id", student.id);
+
+    if (error) {
+      // 저장 실패 시 되돌림
+      setStudents((prev) => prev.map((s) => (s.id === student.id ? previous : s)));
+    }
+  };
+
   if (!isAuthChecked) {
     return (
       <div className="min-h-screen bg-brutal-cream py-10 px-4">
@@ -205,6 +320,8 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-5xl mx-auto">
+        {!isLoading && <StageDashboard students={students} />}
+
         {isLoading ? (
           <p className="font-semibold text-lg">불러오는 중...</p>
         ) : (
@@ -218,7 +335,23 @@ export default function AdminPage() {
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0 overflow-x-auto">
-                    <span className="font-black text-xl whitespace-nowrap shrink-0 mr-5">{student.name}</span>
+                    <div className="w-40 mr-5 shrink-0 flex items-center justify-between gap-1">
+                      <span className="font-black text-xl truncate" title={student.name}>{student.name}</span>
+                      <button
+                        onClick={() => resetStudent(student)}
+                        title={`${student.name}님 진행 상황 초기화`}
+                        aria-label={`${student.name}님 진행 상황 초기화`}
+                        className="shrink-0 w-9 h-9 flex items-center justify-center text-brutal-blue hover:opacity-70 transition-opacity"
+                      >
+                        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     {getStages(student).map((stage, idx, arr) => {
                       const isCurrent = !stage.done && (idx === 0 || arr[idx - 1].done);
                       return (

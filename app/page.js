@@ -21,6 +21,16 @@ function hasProgress(student) {
   );
 }
 
+// 수강생이 마지막으로 진행했던 단계를 기준으로 재진입 지점을 계산
+function getResumePoint(student) {
+  if (!student.antigravity_installed) return { type: "gate", gateStep: "antigravity" };
+  if (!student.netlify_signed_up) return { type: "gate", gateStep: "netlify" };
+  if (!student.folder_created) return { type: "gate", gateStep: "folder" };
+  // 4문항까지 마치고 제작 화면(제작중/다운로드)까지 진행했었다면, 저장된 입력값으로 미리보기로 바로 이동
+  if (student.preview_started && student.business_name) return { type: "preview" };
+  return { type: "form" };
+}
+
 export default function Home() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0); // 0: 수강생 선택, 1~4: 입력폼
@@ -31,6 +41,7 @@ export default function Home() {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [businessName, setBusinessName] = useState("");
   const [product, setProduct] = useState("");
@@ -72,7 +83,24 @@ export default function Home() {
     }
     
     fetchStudents();
+  }, []);
 
+  // 관리자 로그인 세션 감지 (/admin에서 로그인한 경우, 중복 선택 방지 경고를 건너뛸 수 있도록)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAdmin(Boolean(data.session));
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setIsAdmin(Boolean(newSession));
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     const channel = supabase
       .channel("students-home")
       .on(
@@ -168,14 +196,34 @@ export default function Home() {
                       key={student.id}
                       onClick={() => {
                         if (isDisabled) return;
-                        if (hasProgress(student)) {
+                        if (!isAdmin && hasProgress(student)) {
                           window.alert(
                             "이미 진행 중이거나 제출을 마친 수강생입니다. 이름을 다시 확인하고 선택해 주세요."
                           );
                           return;
                         }
                         setSelectedStudent(student);
-                        setGateStep("antigravity");
+                        const resume = getResumePoint(student);
+                        if (resume.type === "gate") {
+                          setGateStep(resume.gateStep);
+                          setCurrentStep(0);
+                        } else if (resume.type === "preview") {
+                          const params = new URLSearchParams({
+                            name: student.business_name || "",
+                            product: student.product || "",
+                            customer: student.target_customer || "",
+                            color: student.brand_color || "",
+                            studentId: student.id,
+                          });
+                          router.push(`/preview?${params.toString()}`);
+                        } else {
+                          setBusinessName(student.business_name || "");
+                          setProduct(student.product || "");
+                          setTargetCustomer(student.target_customer || "");
+                          setBrandColor(student.brand_color || "");
+                          setGateStep("done");
+                          setCurrentStep(1);
+                        }
                       }}
                       disabled={isDisabled}
                       className={`brutal-btn py-4 text-xl ${
@@ -210,6 +258,7 @@ export default function Home() {
         <main className="mt-10 px-4">
           <GateStep
             guide={setupGuides.netlify}
+            extraGuide={setupGuides.github}
             isConfirming={isConfirmingGate}
             onConfirm={() => handleGateConfirm("netlify_signed_up", "folder")}
           />
@@ -303,6 +352,20 @@ export default function Home() {
               ) : (
                 <button
                   onClick={() => {
+                    // 나중에 이 수강생을 다시 선택했을 때 미리보기로 바로 복원할 수 있도록 입력값 저장
+                    if (selectedStudent?.id) {
+                      supabase
+                        .from("students")
+                        .update({
+                          business_name: businessName,
+                          product: product,
+                          target_customer: targetCustomer,
+                          brand_color: brandColor,
+                          updated_at: new Date().toISOString(),
+                        })
+                        .eq("id", selectedStudent.id)
+                        .then(() => {});
+                    }
                     const params = new URLSearchParams({
                       name: businessName,
                       product: product,
