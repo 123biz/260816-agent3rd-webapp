@@ -110,13 +110,19 @@ function LoginForm({ onSubmit, error, isSubmitting }) {
   const [password, setPassword] = useState("");
 
   return (
-    <main className="max-w-sm mx-auto mt-24">
+    <main className="mt-24 px-4">
+      <div className="text-center mb-10">
+        <p className="text-4xl md:text-5xl font-black tracking-tighter whitespace-nowrap">🚀 Antigravity</p>
+        <p className="text-3xl md:text-4xl font-black text-brutal-pink mt-6 whitespace-nowrap">
+          스타트업 대시보드 - 2시간 완성 비즈니스 앱 관제탑
+        </p>
+      </div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(email, password);
         }}
-        className="brutal-card bg-brutal-white p-8 flex flex-col gap-4"
+        className="brutal-card bg-brutal-white p-8 flex flex-col gap-4 max-w-sm mx-auto"
       >
         <h2 className="text-2xl font-black mb-2">🔐 관리자 로그인</h2>
         <input
@@ -299,7 +305,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-brutal-cream py-10 px-4">
       <header className="max-w-5xl mx-auto mb-10 flex items-center justify-between">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tighter">🎛️ 관제탑</h1>
+        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-brutal-pink">🛫 스타트업 대시보드 관제탑</h1>
         <div className="flex items-center gap-3">
           <div className="brutal-card bg-brutal-white w-32 px-4 py-2 font-bold text-sm text-center whitespace-nowrap">
             수강생 {students.length}명
