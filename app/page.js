@@ -267,13 +267,13 @@ export default function Home() {
 
       {/* 관리자가 진행 도중 비활성화한 경우: 모든 흐름을 막고 안내만 노출 */}
       {isBlocked && (
-        <main className="max-w-xl mx-auto mt-3 animate-slide-in-up">
+        <main className="max-w-xl mx-auto mt-24">
           <div className="brutal-card bg-brutal-white p-8 text-center">
             <h2 className="text-2xl font-black mb-4">⛔ 접근이 제한되었습니다</h2>
             <p className="font-semibold text-lg">
               관리자에 의해 계정이 비활성화되었습니다.
               <br />
-              담당 강사에게 문의해 주세요.
+              관리자에게 문의해 주세요.
             </p>
           </div>
         </main>

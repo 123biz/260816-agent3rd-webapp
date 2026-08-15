@@ -101,6 +101,19 @@ body {
   cursor: not-allowed;
 }
 
+/* brutal-card와 나란히 놓일 때 그림자 크기를 맞추기 위한 변형 */
+.brutal-btn-card-shadow {
+  box-shadow: 8px 8px 0px #1A1A2E;
+}
+
+.brutal-btn-card-shadow:hover:not(:disabled) {
+  box-shadow: 10px 10px 0px #1A1A2E;
+}
+
+.brutal-btn-card-shadow:active:not(:disabled) {
+  box-shadow: 4px 4px 0px #1A1A2E;
+}
+
 /* 네오 브루탈리즘 인풋 */
 .brutal-input {
   border: 4px solid #1A1A2E;

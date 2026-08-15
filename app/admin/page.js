@@ -318,7 +318,7 @@ export default function AdminPage() {
           </div>
           <button
             onClick={handleLogout}
-            className="brutal-btn bg-brutal-white px-4 py-2 text-sm whitespace-nowrap"
+            className="brutal-btn brutal-btn-card-shadow bg-brutal-white px-4 py-2 text-sm whitespace-nowrap"
           >
             로그아웃
           </button>
