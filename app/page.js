@@ -46,6 +46,9 @@ export default function Home() {
   // 진행 도중 관리자가 비활성화하면(realtime으로 selectedStudent가 갱신됨) 즉시 진행을 막는다
   const isBlocked = selectedStudent?.is_active === false;
 
+  // "예시 채우기" 버튼은 이름이 '관리자'인 수강생에게만 노출 (일반 수강생은 직접 입력)
+  const isAdminStudent = selectedStudent?.name === "관리자";
+
   const [businessName, setBusinessName] = useState("");
   const [product, setProduct] = useState("");
   const [targetCustomer, setTargetCustomer] = useState("");
@@ -324,7 +327,7 @@ export default function Home() {
                 placeholder="예: 강남 붕어빵 연구소"
                 value={businessName}
                 onChange={setBusinessName}
-                onAutoFill={fillStep1}
+                onAutoFill={isAdminStudent ? fillStep1 : undefined}
                 bgColor="bg-brutal-yellow"
                 isActive={true}
               />
@@ -338,7 +341,7 @@ export default function Home() {
                 placeholder="예: 프리미엄 단팥/슈크림 붕어빵"
                 value={product}
                 onChange={setProduct}
-                onAutoFill={fillStep2}
+                onAutoFill={isAdminStudent ? fillStep2 : undefined}
                 bgColor="bg-brutal-pink"
                 isActive={true}
               />
@@ -352,7 +355,7 @@ export default function Home() {
                 placeholder="예: 점심시간 디저트를 찾는 직장인"
                 value={targetCustomer}
                 onChange={setTargetCustomer}
-                onAutoFill={fillStep3}
+                onAutoFill={isAdminStudent ? fillStep3 : undefined}
                 bgColor="bg-brutal-blue"
                 isActive={true}
               />
@@ -378,7 +381,12 @@ export default function Home() {
               {currentStep < 4 ? (
                 <button
                   onClick={nextStep}
-                  className="brutal-btn bg-brutal-green px-10 py-4 text-lg w-full whitespace-nowrap"
+                  disabled={
+                    (currentStep === 1 && !businessName.trim()) ||
+                    (currentStep === 2 && !product.trim()) ||
+                    (currentStep === 3 && !targetCustomer.trim())
+                  }
+                  className="brutal-btn bg-brutal-green px-10 py-4 text-lg w-full whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   다음 단계로 👉
                 </button>
