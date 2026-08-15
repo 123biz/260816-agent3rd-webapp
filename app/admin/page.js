@@ -347,7 +347,7 @@ export default function AdminPage() {
                         onClick={() => resetStudent(student)}
                         title={`${student.name}님 진행 상황 초기화`}
                         aria-label={`${student.name}님 진행 상황 초기화`}
-                        className="shrink-0 w-9 h-9 flex items-center justify-center text-brutal-blue hover:opacity-70 transition-opacity"
+                        className="shrink-0 w-9 h-9 flex items-center justify-center text-brutal-blue hover:opacity-70 transition-opacity cursor-pointer"
                       >
                         <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <path
