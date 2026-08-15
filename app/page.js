@@ -43,6 +43,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // 진행 도중 관리자가 비활성화하면(realtime으로 selectedStudent가 갱신됨) 즉시 진행을 막는다
+  const isBlocked = selectedStudent?.is_active === false;
+
   const [businessName, setBusinessName] = useState("");
   const [product, setProduct] = useState("");
   const [targetCustomer, setTargetCustomer] = useState("");
@@ -117,6 +120,14 @@ export default function Home() {
             }
             return [...prev, payload.new].sort((a, b) => a.id - b.id);
           });
+
+          // 현재 화면에 선택되어 있는 학생이면, 스냅샷도 함께 최신화해야
+          // 관제탑에서의 되돌리기 등이 새로고침 없이 실시간으로 반영된다.
+          if (payload.eventType !== "DELETE") {
+            setSelectedStudent((prev) =>
+              prev && prev.id === payload.new.id ? payload.new : prev
+            );
+          }
         }
       )
       .subscribe();
@@ -153,34 +164,42 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-brutal-cream py-10 px-4">
       {/* 상단 로고/헤더 */}
-      <header className="max-w-4xl mx-auto mb-10 flex items-center justify-between">
-        {/* 좌측: 로고 */}
-        <div className="flex-1">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tighter cursor-pointer inline-block" onClick={() => setCurrentStep(0)}>
-            🚀 Antigravity
-          </h1>
-        </div>
-        
-        {/* 중앙: 수강생 이름 크게 강조 */}
-        <div className="flex-1 flex justify-center">
-          {selectedStudent && (
-            <span className="font-black text-xl md:text-2xl bg-brutal-green px-6 py-2 border-4 border-brutal-black brutal-shadow-sm whitespace-nowrap">
-              {selectedStudent.name}님
-            </span>
-          )}
-        </div>
+      <header className="max-w-4xl mx-auto mb-3">
+        <div className="flex items-center justify-between">
+          {/* 좌측: 로고 */}
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter cursor-pointer inline-block" onClick={() => setCurrentStep(0)}>
+              🚀 Antigravity
+            </h1>
+          </div>
 
-        {/* 우측: 관제탑 뱃지 */}
-        <div className="flex-1 flex justify-end">
-          <div className="brutal-card bg-brutal-white px-4 py-2 font-bold text-sm hidden md:block">
-            2시간 완성 관제탑
+          {/* 중앙: 수강생 이름 크게 강조 */}
+          <div className="flex-1 flex justify-center">
+            {selectedStudent && (
+              <span className="font-black text-xl md:text-2xl bg-brutal-green px-6 py-2 border-4 border-brutal-black brutal-shadow-sm whitespace-nowrap">
+                {selectedStudent.name}님
+              </span>
+            )}
+          </div>
+
+          {/* 우측: 관제탑 뱃지 */}
+          <div className="flex-1 flex justify-end">
+            <div className="brutal-card bg-brutal-white px-4 py-2 font-bold text-sm hidden md:block">
+              2시간 완성 관제탑
+            </div>
           </div>
         </div>
+
+        {!selectedStudent && (
+          <p className="font-black text-3xl md:text-4xl tracking-tighter text-center leading-tight text-brutal-pink mt-12">
+            스타트업 웹앱 빌더 맛보기
+          </p>
+        )}
       </header>
 
       {/* Step 0: 수강생 선택 화면 */}
       {currentStep === 0 && gateStep === null && (
-        <main className="max-w-xl mx-auto mt-20 animate-slide-in-up">
+        <main className="max-w-xl mx-auto mt-3 animate-slide-in-up">
           <div className="brutal-card bg-brutal-white p-8">
             <h2 className="text-3xl font-black mb-6">👋 환영합니다!</h2>
             <p className="font-semibold text-lg mb-8">본인의 이름을 선택하고 시작해 주세요.</p>
@@ -243,8 +262,22 @@ export default function Home() {
         </main>
       )}
 
+      {/* 관리자가 진행 도중 비활성화한 경우: 모든 흐름을 막고 안내만 노출 */}
+      {isBlocked && (
+        <main className="max-w-xl mx-auto mt-3 animate-slide-in-up">
+          <div className="brutal-card bg-brutal-white p-8 text-center">
+            <h2 className="text-2xl font-black mb-4">⛔ 접근이 제한되었습니다</h2>
+            <p className="font-semibold text-lg">
+              관리자에 의해 계정이 비활성화되었습니다.
+              <br />
+              담당 강사에게 문의해 주세요.
+            </p>
+          </div>
+        </main>
+      )}
+
       {/* 게이트: Antigravity 설치 확인 / Netlify 가입 확인 */}
-      {currentStep === 0 && gateStep === "antigravity" && (
+      {!isBlocked && currentStep === 0 && gateStep === "antigravity" && (
         <main className="mt-10 px-4">
           <GateStep
             guide={setupGuides.antigravity}
@@ -254,7 +287,7 @@ export default function Home() {
         </main>
       )}
 
-      {currentStep === 0 && gateStep === "netlify" && (
+      {!isBlocked && currentStep === 0 && gateStep === "netlify" && (
         <main className="mt-10 px-4">
           <GateStep
             guide={setupGuides.netlify}
@@ -265,7 +298,7 @@ export default function Home() {
         </main>
       )}
 
-      {currentStep === 0 && gateStep === "folder" && (
+      {!isBlocked && currentStep === 0 && gateStep === "folder" && (
         <main className="mt-10 px-4">
           <GateStep
             guide={setupGuides.folder}
@@ -276,7 +309,7 @@ export default function Home() {
       )}
 
       {/* Step 1~4: 본격적인 입력 화면 */}
-      {currentStep > 0 && (
+      {!isBlocked && currentStep > 0 && (
         <>
           <div className="mb-12">
             <ProgressBar currentStep={currentStep} totalSteps={4} />

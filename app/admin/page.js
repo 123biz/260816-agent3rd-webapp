@@ -305,7 +305,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-brutal-cream py-10 px-4">
       <header className="max-w-5xl mx-auto mb-10 flex items-center justify-between">
-        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-brutal-pink">🛫 스타트업 대시보드 관제탑</h1>
+        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-brutal-pink">🚀 스타트업 대시보드 관제탑</h1>
         <div className="flex items-center gap-3">
           <div className="brutal-card bg-brutal-white w-32 px-4 py-2 font-bold text-sm text-center whitespace-nowrap">
             수강생 {students.length}명
