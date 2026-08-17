@@ -7,6 +7,7 @@ import ProgressBar from "@/components/ProgressBar";
 import StepCard from "@/components/StepCard";
 import ColorPicker from "@/components/ColorPicker";
 import GateStep from "@/components/GateStep";
+import CourseRoadmap from "@/components/CourseRoadmap";
 import { setupGuides } from "@/lib/setupGuides";
 
 // 이미 진행을 시작했거나 제출까지 마친 수강생인지 판단 (다른 사람이 실수로 선택하는 것 방지)
@@ -165,13 +166,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-brutal-cream py-10 px-4">
+    <div className="h-screen overflow-hidden bg-brutal-cream flex flex-col">
       {/* 상단 로고/헤더 */}
-      <header className="max-w-4xl mx-auto mb-3">
+      <header className="w-full px-4 md:px-8 pt-8 pb-3 shrink-0 sticky top-0 z-20 bg-brutal-cream border-b-4 border-brutal-black">
         <div className="flex items-center justify-between">
           {/* 좌측: 로고 */}
           <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tighter cursor-pointer inline-block" onClick={() => setCurrentStep(0)}>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter cursor-pointer inline-block" onClick={() => setCurrentStep(0)}>
               🚀 Antigravity
             </h1>
           </div>
@@ -179,7 +180,7 @@ export default function Home() {
           {/* 중앙: 수강생 이름 크게 강조 */}
           <div className="flex-1 flex justify-center">
             {selectedStudent && (
-              <span className="font-black text-xl md:text-2xl bg-brutal-green px-6 py-2 border-4 border-brutal-black brutal-shadow-sm whitespace-nowrap">
+              <span className="font-black text-2xl md:text-3xl bg-brutal-green px-8 py-3 border-4 border-brutal-black brutal-shadow-sm whitespace-nowrap">
                 {selectedStudent.name}님
               </span>
             )}
@@ -187,30 +188,36 @@ export default function Home() {
 
           {/* 우측: 관제탑 뱃지 */}
           <div className="flex-1 flex justify-end">
-            <div className="brutal-card bg-brutal-white px-4 py-2 font-bold text-sm hidden md:block">
+            <div className="brutal-card bg-brutal-white px-5 py-3 font-bold text-lg hidden md:block">
               2시간 완성 관제탑
             </div>
           </div>
         </div>
 
         {!selectedStudent && (
-          <p className="font-black text-3xl md:text-4xl tracking-tighter text-center leading-tight text-brutal-pink mt-12">
+          <p className="font-black text-4xl md:text-5xl tracking-tighter text-center leading-tight text-brutal-pink mt-12">
             스타트업 웹앱 빌더 맛보기
           </p>
         )}
       </header>
 
+      {/* 헤더 아래 나머지 전체 영역 */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+
       {/* Step 0: 수강생 선택 화면 */}
       {currentStep === 0 && gateStep === null && (
-        <main className="max-w-xl mx-auto mt-3 animate-slide-in-up">
-          <div className="brutal-card bg-brutal-white p-8">
+        <div className="flex-1 min-h-0 w-full px-4 md:px-6 pb-4 grid grid-cols-1 md:grid-cols-[320px_1fr_300px] md:grid-rows-[minmax(0,1fr)] gap-4">
+          <CourseRoadmap />
+
+          <main className="h-full min-h-0 mt-8 overflow-y-auto animate-slide-in-up">
+          <div className="brutal-card bg-brutal-white p-6">
             <h2 className="text-3xl font-black mb-6">👋 환영합니다!</h2>
             <p className="font-semibold text-lg mb-8">본인의 이름을 선택하고 시작해 주세요.</p>
 
             {isLoading ? (
               <p>명단 불러오는 중...</p>
             ) : (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {students.map((student) => {
                   const isDisabled = student.is_active === false;
                   return (
@@ -248,7 +255,7 @@ export default function Home() {
                         }
                       }}
                       disabled={isDisabled}
-                      className={`brutal-btn py-4 text-xl ${
+                      className={`brutal-btn py-3 text-lg ${
                         isDisabled
                           ? "bg-brutal-gray opacity-50 cursor-not-allowed"
                           : "bg-brutal-yellow"
@@ -262,12 +269,13 @@ export default function Home() {
               </div>
             )}
           </div>
-        </main>
+          </main>
+        </div>
       )}
 
       {/* 관리자가 진행 도중 비활성화한 경우: 모든 흐름을 막고 안내만 노출 */}
       {isBlocked && (
-        <main className="max-w-xl mx-auto mt-24">
+        <main className="flex-1 min-h-0 overflow-y-auto max-w-xl mx-auto mt-24 px-4">
           <div className="brutal-card bg-brutal-white p-8 text-center">
             <h2 className="text-2xl font-black mb-4">⛔ 접근이 제한되었습니다</h2>
             <p className="font-semibold text-lg">
@@ -281,7 +289,7 @@ export default function Home() {
 
       {/* 게이트: Antigravity 설치 확인 / Netlify 가입 확인 */}
       {!isBlocked && currentStep === 0 && gateStep === "antigravity" && (
-        <main className="mt-10 px-4">
+        <main className="flex-1 min-h-0 overflow-y-auto mt-10 px-4">
           <GateStep
             guide={setupGuides.antigravity}
             isConfirming={isConfirmingGate}
@@ -291,7 +299,7 @@ export default function Home() {
       )}
 
       {!isBlocked && currentStep === 0 && gateStep === "netlify" && (
-        <main className="mt-10 px-4">
+        <main className="flex-1 min-h-0 overflow-y-auto mt-10 px-4">
           <GateStep
             guide={setupGuides.netlify}
             extraGuide={setupGuides.github}
@@ -302,7 +310,7 @@ export default function Home() {
       )}
 
       {!isBlocked && currentStep === 0 && gateStep === "folder" && (
-        <main className="mt-10 px-4">
+        <main className="flex-1 min-h-0 overflow-y-auto mt-10 px-4">
           <GateStep
             guide={setupGuides.folder}
             isConfirming={isConfirmingGate}
@@ -313,12 +321,12 @@ export default function Home() {
 
       {/* Step 1~4: 본격적인 입력 화면 */}
       {!isBlocked && currentStep > 0 && (
-        <>
-          <div className="mb-12">
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+          <div className="mb-12 px-4">
             <ProgressBar currentStep={currentStep} totalSteps={4} />
           </div>
 
-          <main className="max-w-4xl mx-auto flex flex-col items-center">
+          <main className="max-w-4xl mx-auto flex flex-col items-center px-4">
             {currentStep === 1 && (
               <StepCard
                 stepNumber={1}
@@ -424,8 +432,9 @@ export default function Home() {
               )}
             </div>
           </main>
-        </>
+        </div>
       )}
+      </div>
     </div>
   );
 }
