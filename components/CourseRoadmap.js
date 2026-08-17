@@ -1,21 +1,59 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { courseRoadmap } from "@/lib/courseRoadmap";
 
 /**
  * CourseRoadmap — 좌측 "제목 버튼" 네비게이션 + 우측 "설명" 패널을 한 쌍으로 렌더링한다.
  * 부모가 CSS grid일 때 두 컬럼으로 나란히 배치되도록 래핑 없이 Fragment로 반환한다.
- * 버튼을 누르면 설명 패널에서 해당 주제 섹션으로 스크롤 이동한다.
+ * 버튼 클릭 시 설명 패널이 해당 섹션으로 스크롤 이동하고, 반대로 설명 패널을 직접
+ * 스크롤하면 IntersectionObserver가 현재 보이는 섹션에 맞춰 버튼 하이라이트를 갱신한다.
  */
 export default function CourseRoadmap() {
   const [selectedTopicId, setSelectedTopicId] = useState(null);
   const sectionRefs = useRef({});
+  const detailRef = useRef(null);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef(null);
 
   const handleSelect = (topicId) => {
     setSelectedTopicId(topicId);
+    isProgrammaticScroll.current = true;
     sectionRefs.current[topicId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 700);
   };
+
+  useEffect(() => {
+    const container = detailRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isProgrammaticScroll.current) return;
+
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+
+        if (visible.length > 0) {
+          setSelectedTopicId(visible[0].target.dataset.topicId);
+        }
+      },
+      { root: container, rootMargin: "0px 0px -60% 0px", threshold: 0 }
+    );
+
+    Object.values(sectionRefs.current).forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <>
@@ -40,10 +78,11 @@ export default function CourseRoadmap() {
         </div>
       </nav>
 
-      <div className="brutal-card bg-brutal-white p-6 mt-8 h-full min-h-0 overflow-y-auto animate-slide-in-up">
+      <div ref={detailRef} className="brutal-card bg-brutal-white p-6 mt-8 h-full min-h-0 overflow-y-auto animate-slide-in-up">
         {courseRoadmap.map((topic) => (
           <section
             key={topic.id}
+            data-topic-id={topic.id}
             ref={(el) => {
               sectionRefs.current[topic.id] = el;
             }}

@@ -195,9 +195,16 @@ export default function Home() {
         </div>
 
         {!selectedStudent && (
-          <p className="font-black text-4xl md:text-5xl tracking-tighter text-center leading-tight text-brutal-pink mt-4">
-            스타트업 웹앱 빌더 맛보기
-          </p>
+          <>
+            <p className="font-black text-4xl md:text-5xl tracking-tighter text-center leading-tight text-brutal-pink mt-4">
+              스타트업 웹앱 빌더 맛보기
+            </p>
+            <div className="flex justify-center mt-4">
+              <p className="inline-block bg-brutal-yellow border-4 border-brutal-black brutal-shadow-sm px-6 py-3 font-black text-lg md:text-xl text-brutal-black">
+                <span className="mr-2">2026-09-06</span>AI에이전트 3기 4회차(홍용기 박사) 강의 노트
+              </p>
+            </div>
+          </>
         )}
       </header>
 
