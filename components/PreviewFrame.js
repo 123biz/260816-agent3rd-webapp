@@ -12,7 +12,7 @@ export default function PreviewFrame({ code }) {
         <div className="w-3 h-3 rounded-full bg-brutal-yellow"></div>
         <div className="w-3 h-3 rounded-full bg-brutal-green"></div>
         <div className="ml-4 text-brutal-white text-xs font-bold font-sans">
-          localhost:8080 (미리보기)
+          미리보기
         </div>
       </div>
       
