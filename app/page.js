@@ -37,6 +37,7 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState(0); // 0: 수강생 선택, 1~4: 입력폼
   const [gateStep, setGateStep] = useState(null); // null | "antigravity" | "netlify" | "done"
   const [isConfirmingGate, setIsConfirmingGate] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); // 새로고침 시 항상 시작 화면부터 보여주기 위한 로컬 상태
 
   // 상태 관리
   const [students, setStudents] = useState([]);
@@ -211,6 +212,17 @@ export default function Home() {
       {/* 헤더 아래 나머지 전체 영역 */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
+      {!hasStarted ? (
+        <div className="flex-1 min-h-0 flex items-center justify-center pb-40">
+          <button
+            onClick={() => setHasStarted(true)}
+            className="brutal-btn bg-brutal-pink text-white px-16 py-8 text-3xl md:text-4xl animate-pulse-subtle"
+          >
+            🚀 시작하기
+          </button>
+        </div>
+      ) : (
+      <>
       {/* Step 0: 수강생 선택 화면 */}
       {currentStep === 0 && gateStep === null && (
         <div className="flex-1 min-h-0 w-full px-4 md:px-6 pb-4 grid grid-cols-1 md:grid-cols-[320px_1fr_300px] md:grid-rows-[minmax(0,1fr)] gap-4">
@@ -440,6 +452,8 @@ export default function Home() {
             </div>
           </main>
         </div>
+      )}
+      </>
       )}
       </div>
     </div>
