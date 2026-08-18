@@ -98,8 +98,10 @@ export default function CourseRoadmap() {
             ref={(el) => {
               sectionRefs.current[topic.id] = el;
             }}
-            className={`border-4 p-5 mb-5 last:mb-0 bg-brutal-cream ${
-              selectedTopicId === topic.id ? "border-brutal-pink" : "border-brutal-black"
+            className={`border-4 p-5 mb-5 last:mb-0 ${
+              selectedTopicId === topic.id
+                ? "bg-brutal-pink border-brutal-black text-white"
+                : "bg-brutal-cream border-brutal-black"
             }`}
           >
             <div className="font-black text-3xl mb-2">{topic.label}</div>
@@ -117,7 +119,7 @@ export default function CourseRoadmap() {
 
             <div className="flex flex-col gap-3">
               {topic.children.map((child) => (
-                <div key={child.label} className="border-2 border-brutal-black bg-brutal-white p-4">
+                <div key={child.label} className="border-2 border-brutal-black bg-brutal-white text-brutal-black p-4">
                   <div className="font-black text-2xl mb-2">{child.label}</div>
                   <div className="text-xl font-semibold opacity-80 whitespace-pre-line">{child.desc}</div>
                   {child.note && <div className="mt-2 text-xl font-black text-blue-700">{child.note}</div>}
