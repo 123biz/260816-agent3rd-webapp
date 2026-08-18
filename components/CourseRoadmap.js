@@ -109,7 +109,7 @@ export default function CourseRoadmap() {
 
             {topic.id === "ai-ecosystem" && (
               <Image
-                src="/aiecosystem.png"
+                src="/aiecosystem.webp"
                 alt="AI Ecosystem 5가지 유형"
                 width={1000}
                 height={600}
