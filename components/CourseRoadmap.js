@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { courseRoadmap } from "@/lib/courseRoadmap";
 
@@ -8,10 +9,13 @@ import { courseRoadmap } from "@/lib/courseRoadmap";
  * 부모가 CSS grid일 때 두 컬럼으로 나란히 배치되도록 래핑 없이 Fragment로 반환한다.
  * 버튼 클릭 시 설명 패널이 해당 섹션으로 스크롤 이동하고, 반대로 설명 패널을 직접
  * 스크롤하면 IntersectionObserver가 현재 보이는 섹션에 맞춰 버튼 하이라이트를 갱신한다.
+ * selectedTopicId가 바뀔 때마다(클릭이든 스크롤 감지든) 네비게이션 쪽도 해당 버튼이
+ * 보이도록 자체 스크롤을 맞춘다.
  */
 export default function CourseRoadmap() {
   const [selectedTopicId, setSelectedTopicId] = useState(null);
   const sectionRefs = useRef({});
+  const buttonRefs = useRef({});
   const detailRef = useRef(null);
   const isProgrammaticScroll = useRef(false);
   const scrollTimeoutRef = useRef(null);
@@ -55,6 +59,11 @@ export default function CourseRoadmap() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!selectedTopicId) return;
+    buttonRefs.current[selectedTopicId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedTopicId]);
+
   return (
     <>
       <nav className="brutal-card bg-brutal-purple p-6 mt-8 h-full min-h-0 overflow-y-auto animate-slide-in-up">
@@ -66,6 +75,9 @@ export default function CourseRoadmap() {
             return (
               <button
                 key={topic.id}
+                ref={(el) => {
+                  buttonRefs.current[topic.id] = el;
+                }}
                 onClick={() => handleSelect(topic.id)}
                 className={`brutal-btn !normal-case text-xl px-4 h-28 flex items-center justify-center leading-tight text-center whitespace-pre-line ${
                   isActive ? "bg-brutal-pink text-white" : "bg-brutal-yellow"
@@ -92,6 +104,16 @@ export default function CourseRoadmap() {
           >
             <div className="font-black text-3xl mb-2">{topic.label}</div>
             <p className="text-xl font-semibold mb-4 opacity-90">{topic.desc}</p>
+
+            {topic.id === "ai-ecosystem" && (
+              <Image
+                src="/aiecosystem.png"
+                alt="AI Ecosystem 5가지 유형"
+                width={1000}
+                height={600}
+                className="w-full h-auto mb-4 border-2 border-brutal-black"
+              />
+            )}
 
             <div className="flex flex-col gap-3">
               {topic.children.map((child) => (
