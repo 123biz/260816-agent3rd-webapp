@@ -168,7 +168,7 @@ export default function Home() {
   return (
     <div className="h-screen overflow-hidden bg-brutal-cream flex flex-col">
       {/* 상단 로고/헤더 */}
-      <header className="w-full px-4 md:px-8 pt-8 pb-8 shrink-0 sticky top-0 z-20 bg-brutal-cream border-b-4 border-brutal-black">
+      <header className="w-full px-4 md:px-8 pt-8 pb-8 shrink-0 sticky top-0 z-20 bg-brutal-cream">
         <div className="flex items-center justify-between">
           {/* 좌측: 로고 */}
           <div className="flex-1">
