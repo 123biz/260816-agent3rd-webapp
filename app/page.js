@@ -169,21 +169,25 @@ export default function Home() {
   return (
     <div className="h-screen overflow-hidden bg-brutal-cream flex flex-col">
       {/* 상단 로고/헤더 */}
-      <header className="w-full px-4 md:px-8 pt-8 pb-8 shrink-0 sticky top-0 z-20 bg-brutal-cream">
-        <div className="flex items-center justify-between">
+      <header className="w-full px-4 md:px-8 pt-4 pb-4 shrink-0 sticky top-0 z-20 bg-brutal-cream">
+        <div className="flex items-center justify-between gap-4">
           {/* 좌측: 로고 */}
-          <div className="flex-1">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter cursor-pointer inline-block" onClick={() => setCurrentStep(0)}>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter cursor-pointer inline-block" onClick={() => setCurrentStep(0)}>
               🚀 Antigravity
             </h1>
           </div>
 
-          {/* 중앙: 수강생 이름 크게 강조 */}
+          {/* 중앙: 타이틀 또는 수강생 이름 */}
           <div className="flex-1 flex justify-center">
-            {selectedStudent && (
+            {selectedStudent ? (
               <span className="font-black text-2xl md:text-3xl bg-brutal-green px-8 py-3 border-4 border-brutal-black brutal-shadow-sm whitespace-nowrap">
                 {selectedStudent.name}님
               </span>
+            ) : (
+              <p className="font-black text-2xl md:text-4xl tracking-tighter text-center leading-tight text-brutal-pink whitespace-nowrap">
+                스타트업 웹앱 빌더 맛보기
+              </p>
             )}
           </div>
 
@@ -196,16 +200,11 @@ export default function Home() {
         </div>
 
         {!selectedStudent && (
-          <>
-            <p className="font-black text-4xl md:text-5xl tracking-tighter text-center leading-tight text-brutal-pink mt-4">
-              스타트업 웹앱 빌더 맛보기
+          <div className="flex justify-center mt-3">
+            <p className="inline-block bg-brutal-yellow border-4 border-brutal-black brutal-shadow-sm px-6 py-2 font-black text-base md:text-lg text-brutal-black">
+              <span className="mr-2">2026-09-06</span>AI에이전트 3기 4회차(홍용기 박사) 강의 노트
             </p>
-            <div className="flex justify-center mt-4">
-              <p className="inline-block bg-brutal-yellow border-4 border-brutal-black brutal-shadow-sm px-6 py-3 font-black text-lg md:text-xl text-brutal-black">
-                <span className="mr-2">2026-09-06</span>AI에이전트 3기 4회차(홍용기 박사) 강의 노트
-              </p>
-            </div>
-          </>
+          </div>
         )}
       </header>
 
