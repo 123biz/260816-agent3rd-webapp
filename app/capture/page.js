@@ -28,9 +28,34 @@ export default function CapturePage() {
       }
     }
     fetchStudents();
+
+    // 관리자가 활성/비활성을 바꾸거나 진행 상황을 되돌리면 명단에 실시간 반영
+    const channel = supabase
+      .channel("students-capture")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "students" },
+        (payload) => {
+          setStudents((prev) => {
+            if (payload.eventType === "DELETE") {
+              return prev.filter((s) => s.id !== payload.old.id);
+            }
+            const exists = prev.some((s) => s.id === payload.new.id);
+            if (exists) {
+              return prev.map((s) => (s.id === payload.new.id ? payload.new : s));
+            }
+            return [...prev, payload.new].sort((a, b) => a.id - b.id);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  // 업로드 후 최신 상태를 반영하기 위해 실시간 스냅샷 사용
+  // 선택한 수강생은 실시간 students 배열 기준 최신 스냅샷을 사용
   const selectedStudent = selectedId
     ? students.find((s) => s.id === selectedId) ?? null
     : null;
@@ -49,10 +74,19 @@ export default function CapturePage() {
               {selectedStudent.name}님
             </div>
 
-            <ScreenshotUpload
-              studentId={selectedStudent.id}
-              initialUrl={selectedStudent.install_screenshot_url}
-            />
+            {selectedStudent.is_active === false ? (
+              <div className="brutal-card bg-brutal-white p-6 text-center">
+                <p className="font-black text-lg mb-1">⛔ 비활성 상태입니다</p>
+                <p className="font-semibold text-sm text-brutal-black/70">
+                  강사님께 활성화를 요청한 뒤 다시 시도해 주세요.
+                </p>
+              </div>
+            ) : (
+              <ScreenshotUpload
+                studentId={selectedStudent.id}
+                initialUrl={selectedStudent.install_screenshot_url}
+              />
+            )}
 
             <button
               onClick={() => setSelectedId(null)}
@@ -76,15 +110,27 @@ export default function CapturePage() {
               </p>
             ) : (
               <div className="grid grid-cols-1 gap-3">
-                {students.map((student) => (
-                  <button
-                    key={student.id}
-                    onClick={() => setSelectedId(student.id)}
-                    className="brutal-btn bg-brutal-yellow py-5 text-xl"
-                  >
-                    {student.name}
-                  </button>
-                ))}
+                {students.map((student) => {
+                  const isDisabled = student.is_active === false;
+                  return (
+                    <button
+                      key={student.id}
+                      onClick={() => {
+                        if (isDisabled) return;
+                        setSelectedId(student.id);
+                      }}
+                      disabled={isDisabled}
+                      className={`brutal-btn py-5 text-xl ${
+                        isDisabled
+                          ? "bg-brutal-gray opacity-50 cursor-not-allowed"
+                          : "bg-brutal-yellow"
+                      }`}
+                    >
+                      {student.name}
+                      {isDisabled && " (비활성)"}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
