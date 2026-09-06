@@ -8,6 +8,7 @@ import StepCard from "@/components/StepCard";
 import ColorPicker from "@/components/ColorPicker";
 import GateStep from "@/components/GateStep";
 import CourseRoadmap from "@/components/CourseRoadmap";
+import ScreenshotUpload from "@/components/ScreenshotUpload";
 import { setupGuides } from "@/lib/setupGuides";
 
 // 이미 진행을 시작했거나 제출까지 마친 수강생인지 판단 (다른 사람이 실수로 선택하는 것 방지)
@@ -39,6 +40,10 @@ export default function Home() {
   const [isConfirmingGate, setIsConfirmingGate] = useState(false);
   const [hasStarted, setHasStarted] = useState(false); // 새로고침 시 항상 시작 화면부터 보여주기 위한 로컬 상태
 
+  // 이미 앱을 설치한 수강생이 폰에서 설치 화면 캡쳐만 올리는 모드 (제작 흐름과 분리)
+  const [screenshotMode, setScreenshotMode] = useState(false);
+  const [screenshotStudentId, setScreenshotStudentId] = useState(null);
+
   // 상태 관리
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -47,6 +52,11 @@ export default function Home() {
 
   // 진행 도중 관리자가 비활성화하면(realtime으로 selectedStudent가 갱신됨) 즉시 진행을 막는다
   const isBlocked = selectedStudent?.is_active === false;
+
+  // 설치 인증 모드에서 고른 수강생 (실시간 students 배열 기준 최신 스냅샷)
+  const screenshotStudent = screenshotStudentId
+    ? students.find((s) => s.id === screenshotStudentId) ?? null
+    : null;
 
   // "예시 채우기" 버튼은 이름이 '관리자'인 수강생에게만 노출 (일반 수강생은 직접 입력)
   const isAdminStudent = selectedStudent?.name === "관리자";
@@ -220,6 +230,56 @@ export default function Home() {
             🚀 시작하기
           </button>
         </div>
+      ) : screenshotMode ? (
+        <main className="flex-1 min-h-0 overflow-y-auto w-full max-w-md mx-auto mt-10 px-4">
+          <button
+            onClick={() => {
+              setScreenshotMode(false);
+              setScreenshotStudentId(null);
+            }}
+            className="brutal-btn bg-brutal-gray px-4 py-2 text-sm mb-4"
+          >
+            ← 처음으로
+          </button>
+
+          {screenshotStudent ? (
+            <div className="flex flex-col gap-4">
+              <div className="brutal-card bg-brutal-green px-4 py-3 font-black text-xl text-center">
+                {screenshotStudent.name}님
+              </div>
+              <ScreenshotUpload
+                studentId={screenshotStudent.id}
+                initialUrl={screenshotStudent.install_screenshot_url}
+              />
+              <button
+                onClick={() => setScreenshotStudentId(null)}
+                className="brutal-btn bg-brutal-white px-4 py-2 text-sm"
+              >
+                다른 이름 선택
+              </button>
+            </div>
+          ) : (
+            <div className="brutal-card bg-brutal-white p-6">
+              <h2 className="text-2xl font-black mb-4">📸 설치 화면 인증</h2>
+              <p className="font-semibold mb-6">본인 이름을 선택하세요.</p>
+              {isLoading ? (
+                <p>명단 불러오는 중...</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {students.map((student) => (
+                    <button
+                      key={student.id}
+                      onClick={() => setScreenshotStudentId(student.id)}
+                      className="brutal-btn bg-brutal-yellow py-3 text-lg"
+                    >
+                      {student.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </main>
       ) : (
       <>
       {/* Step 0: 수강생 선택 화면 */}
@@ -230,7 +290,13 @@ export default function Home() {
           <main className="h-full min-h-0 mt-8 overflow-y-auto animate-slide-in-up">
           <div className="brutal-card bg-brutal-white p-6">
             <h2 className="text-3xl font-black mb-6">👋 환영합니다!</h2>
-            <p className="font-semibold text-lg mb-8">본인의 이름을 선택하고 시작해 주세요.</p>
+            <p className="font-semibold text-lg mb-4">본인의 이름을 선택하고 시작해 주세요.</p>
+            <button
+              onClick={() => setScreenshotMode(true)}
+              className="brutal-btn bg-brutal-purple px-4 py-3 text-sm w-full mb-8"
+            >
+              📸 이미 앱을 설치했다면 → 설치 화면 인증하기
+            </button>
 
             {isLoading ? (
               <p>명단 불러오는 중...</p>

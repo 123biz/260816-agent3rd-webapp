@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import ImageLightbox from "@/components/ImageLightbox";
 
 // 단계 정의 (컬럼명 ↔ 라벨). 학생별 상세 뱃지와 전체 통계 대시보드가 공유한다.
 const STAGE_DEFS = [
@@ -26,6 +27,7 @@ const RESET_STUDENT_FIELDS = {
   preview_started: false,
   pwa_downloaded: false,
   final_url: null,
+  install_screenshot_url: null,
   business_name: null,
   product: null,
   target_customer: null,
@@ -163,6 +165,7 @@ export default function AdminPage() {
 
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lightboxUrl, setLightboxUrl] = useState(null); // 설치 화면 캡쳐 모달
 
   // 로그인 세션 확인 및 변경 감지
   useEffect(() => {
@@ -385,6 +388,14 @@ export default function AdminPage() {
                         🔗 사이트 이동
                       </a>
                     )}
+                    {student.install_screenshot_url && (
+                      <button
+                        onClick={() => setLightboxUrl(student.install_screenshot_url)}
+                        className="brutal-btn bg-brutal-purple px-4 py-2 text-xs font-black shrink-0 whitespace-nowrap"
+                      >
+                        📸 설치화면
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
@@ -413,6 +424,14 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+
+      {lightboxUrl && (
+        <ImageLightbox
+          url={lightboxUrl}
+          alt="수강생 설치 화면 캡쳐"
+          onClose={() => setLightboxUrl(null)}
+        />
+      )}
     </div>
   );
 }
