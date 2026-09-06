@@ -6,7 +6,7 @@ import ScreenshotUpload from "@/components/ScreenshotUpload";
 
 // 모바일 전용 화면: 폰에 앱을 설치한 수강생이 설치 화면 캡쳐만 전송한다.
 // 메인(/)의 강의 로드맵·제작 흐름은 전부 빼고, "이름 선택 → 사진 전송"만 남긴다.
-export default function InstallPage() {
+export default function CapturePage() {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState(null);
