@@ -8,7 +8,6 @@ import ImageLightbox from "@/components/ImageLightbox";
 const STAGE_DEFS = [
   { key: "antigravity_installed", label: "설치" },
   { key: "netlify_signed_up", label: "가입" },
-  { key: "folder_created", label: "폴더" },
   { key: "preview_started", label: "제작중" },
   { key: "pwa_downloaded", label: "다운로드" },
   { key: "final_url", label: "최종 제출" },
@@ -23,7 +22,6 @@ function getStages(student) {
 const RESET_STUDENT_FIELDS = {
   antigravity_installed: false,
   netlify_signed_up: false,
-  folder_created: false,
   preview_started: false,
   pwa_downloaded: false,
   final_url: null,
@@ -35,11 +33,10 @@ const RESET_STUDENT_FIELDS = {
 };
 
 // 링 차트 반지름(바깥 = 설치 ~ 안쪽 = 최종 제출)과 무지개 배색
-const RING_RADII = [44, 37, 30, 23, 16, 9];
+const RING_RADII = [44, 35, 26, 17, 8];
 const RING_COLORS = [
   "var(--color-brutal-red)",
   "var(--color-brutal-orange)",
-  "var(--color-brutal-yellow)",
   "var(--color-brutal-green)",
   "var(--color-brutal-blue)",
   "var(--color-brutal-purple)",
@@ -59,7 +56,7 @@ function StageDashboard({ students }) {
   // 수강생 행의 이름 칸도 동일한 w-40으로 고정했기 때문에(원래는 텍스트 길이만큼 늘어나는 가변폭이었음),
   // 여기서 같은 폭(이름 칸 w-40 + mr-5, 단계 칸 w-28, gap-3)의 스페이서를 써야 막대가 배지와 정확히 정렬된다.
   return (
-    <div className="brutal-card bg-brutal-white p-5 mb-8 overflow-x-auto">
+    <div className="brutal-card bg-brutal-white p-5 mb-8">
       <h2 className="text-xl font-black mb-6">📊 전체 진행 현황</h2>
       <div className="flex items-end gap-3 h-48 border-b-4 border-brutal-black">
         <div className="w-40 mr-5 shrink-0 self-center flex justify-center">
@@ -87,21 +84,24 @@ function StageDashboard({ students }) {
             })}
           </svg>
         </div>
-        {stageStats.map((stage) => (
-          <div key={stage.key} className="w-28 shrink-0 h-full flex flex-col items-center">
-            <span className="font-black text-xs mb-1 whitespace-nowrap">
-              {stage.done}/{total} ({stage.pct}%)
-            </span>
-            {/* 회색 트랙 = 전체 인원(100%), 초록 채움 = 해당 단계 완료 인원 */}
-            <div className="relative w-full flex-1">
-              <div className="absolute inset-0 bg-brutal-gray" />
-              <div
-                className="absolute bottom-0 left-0 w-full bg-brutal-green border-2 border-b-0 border-brutal-black transition-all duration-300"
-                style={{ height: `${Math.max(stage.pct, 2)}%` }}
-              />
+        {/* 막대만 가로 스크롤 (수강생 행의 단계 박스 스크롤과 정렬을 맞춘다) */}
+        <div className="flex items-end gap-3 h-full min-w-0 overflow-x-auto">
+          {stageStats.map((stage) => (
+            <div key={stage.key} className="w-28 shrink-0 h-full flex flex-col items-center">
+              <span className="font-black text-xs mb-1 whitespace-nowrap">
+                {stage.done}/{total} ({stage.pct}%)
+              </span>
+              {/* 회색 트랙 = 전체 인원(100%), 초록 채움 = 해당 단계 완료 인원 */}
+              <div className="relative w-full flex-1">
+                <div className="absolute inset-0 bg-brutal-gray" />
+                <div
+                  className="absolute bottom-0 left-0 w-full bg-brutal-green border-2 border-b-0 border-brutal-black transition-all duration-300"
+                  style={{ height: `${Math.max(stage.pct, 2)}%` }}
+                />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -264,10 +264,10 @@ export default function AdminPage() {
     }
   };
 
-  // 진행 상황을 초기 상태로 되돌린다 (설치/가입/폴더/제작중/다운로드/최종 제출 + 저장된 4문항 입력값 삭제)
+  // 진행 상황을 초기 상태로 되돌린다 (설치/가입/제작중/다운로드/최종 제출 + 저장된 4문항 입력값 삭제)
   const resetStudent = async (student) => {
     const confirmed = window.confirm(
-      `${student.name}님의 진행 상황을 초기 상태로 되돌릴까요?\n설치/가입/폴더/제작중/다운로드/최종 제출 기록이 모두 지워지며 되돌릴 수 없습니다.`
+      `${student.name}님의 진행 상황을 초기 상태로 되돌릴까요?\n설치/가입/제작중/다운로드/최종 제출 기록이 모두 지워지며 되돌릴 수 없습니다.`
     );
     if (!confirmed) return;
 
@@ -306,8 +306,8 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brutal-cream py-10 px-4">
-      <header className="max-w-5xl mx-auto mb-10 flex items-center justify-between">
+    <div className="min-h-screen bg-brutal-cream py-10 px-12 md:px-24">
+      <header className="mb-10 flex items-center justify-between">
         <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-brutal-pink">🚀 스타트업 대시보드 관제탑</h1>
         <div className="flex items-center gap-3">
           <div className="brutal-card bg-brutal-white w-32 px-4 py-2 font-bold text-sm text-center whitespace-nowrap">
@@ -328,7 +328,7 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto">
+      <main className="w-full">
         {!isLoading && <StageDashboard students={students} />}
 
         {isLoading ? (
@@ -343,9 +343,10 @@ export default function AdminPage() {
                 }`}
               >
                 <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0 overflow-x-auto">
-                    <div className="w-40 mr-5 shrink-0 flex items-center justify-between gap-1">
-                      <span className="font-black text-xl truncate" title={student.name}>{student.name}</span>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* 이름 칸은 스크롤 밖에 고정 — 단계 박스를 밀어도 누구 행인지 항상 보이게 */}
+                    <div className="w-40 mr-5 shrink-0 flex items-center justify-start gap-8">
+                      <span className="font-black text-xl truncate min-w-0" title={student.name}>{student.name}</span>
                       <button
                         onClick={() => resetStudent(student)}
                         title={`${student.name}님 진행 상황 초기화`}
@@ -361,41 +362,44 @@ export default function AdminPage() {
                         </svg>
                       </button>
                     </div>
-                    {getStages(student).map((stage, idx, arr) => {
-                      const isCurrent = !stage.done && (idx === 0 || arr[idx - 1].done);
-                      return (
-                        <span
-                          key={stage.label}
-                          className={`w-28 shrink-0 text-center text-sm font-black px-2 py-3 border-2 border-brutal-black whitespace-nowrap ${
-                            stage.done
-                              ? "bg-brutal-green"
-                              : isCurrent
-                                ? "bg-brutal-blue"
-                                : "bg-brutal-gray opacity-50"
-                          }`}
+                    {/* 단계 박스 + 링크만 가로 스크롤 */}
+                    <div className="flex items-center gap-3 min-w-0 overflow-x-auto">
+                      {getStages(student).map((stage, idx, arr) => {
+                        const isCurrent = !stage.done && (idx === 0 || arr[idx - 1].done);
+                        return (
+                          <span
+                            key={stage.label}
+                            className={`w-28 shrink-0 text-center text-sm font-black px-2 py-3 border-2 border-brutal-black whitespace-nowrap ${
+                              stage.done
+                                ? "bg-brutal-green"
+                                : isCurrent
+                                  ? "bg-brutal-blue"
+                                  : "bg-brutal-gray opacity-50"
+                            }`}
+                          >
+                            {idx + 1}. {stage.label} {stage.done ? "✅" : "☐"}
+                          </span>
+                        );
+                      })}
+                      {student.final_url && (
+                        <a
+                          href={student.final_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="brutal-btn bg-brutal-orange px-4 py-2 text-xs font-black shrink-0 whitespace-nowrap"
                         >
-                          {idx + 1}. {stage.label} {stage.done ? "✅" : "☐"}
-                        </span>
-                      );
-                    })}
-                    {student.final_url && (
-                      <a
-                        href={student.final_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="brutal-btn bg-brutal-orange px-4 py-2 text-xs font-black shrink-0 whitespace-nowrap"
-                      >
-                        🔗 사이트 이동
-                      </a>
-                    )}
-                    {student.install_screenshot_url && (
-                      <button
-                        onClick={() => setLightboxUrl(student.install_screenshot_url)}
-                        className="brutal-btn bg-brutal-purple px-4 py-2 text-xs font-black shrink-0 whitespace-nowrap"
-                      >
-                        📸 설치화면
-                      </button>
-                    )}
+                          🔗 사이트 이동
+                        </a>
+                      )}
+                      {student.install_screenshot_url && (
+                        <button
+                          onClick={() => setLightboxUrl(student.install_screenshot_url)}
+                          className="brutal-btn bg-brutal-purple px-4 py-2 text-xs font-black shrink-0 whitespace-nowrap"
+                        >
+                          📸 설치화면
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">

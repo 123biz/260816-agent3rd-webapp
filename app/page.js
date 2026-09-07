@@ -15,7 +15,6 @@ function hasProgress(student) {
   return Boolean(
     student.antigravity_installed ||
       student.netlify_signed_up ||
-      student.folder_created ||
       student.preview_started ||
       student.pwa_downloaded ||
       student.final_url
@@ -26,7 +25,6 @@ function hasProgress(student) {
 function getResumePoint(student) {
   if (!student.antigravity_installed) return { type: "gate", gateStep: "antigravity" };
   if (!student.netlify_signed_up) return { type: "gate", gateStep: "netlify" };
-  if (!student.folder_created) return { type: "gate", gateStep: "folder" };
   // 4문항까지 마치고 제작 화면(제작중/다운로드)까지 진행했었다면, 저장된 입력값으로 미리보기로 바로 이동
   if (student.preview_started && student.business_name) return { type: "preview" };
   return { type: "form" };
@@ -322,17 +320,7 @@ export default function Home() {
             guide={setupGuides.netlify}
             extraGuide={setupGuides.github}
             isConfirming={isConfirmingGate}
-            onConfirm={() => handleGateConfirm("netlify_signed_up", "folder")}
-          />
-        </main>
-      )}
-
-      {!isBlocked && currentStep === 0 && gateStep === "folder" && (
-        <main className="flex-1 min-h-0 overflow-y-auto mt-10 px-4">
-          <GateStep
-            guide={setupGuides.folder}
-            isConfirming={isConfirmingGate}
-            onConfirm={() => handleGateConfirm("folder_created", "done")}
+            onConfirm={() => handleGateConfirm("netlify_signed_up", "done")}
           />
         </main>
       )}
