@@ -8,7 +8,7 @@ const outfit = Outfit({
 
 // 메타데이터: SEO 기본 설정
 export const metadata = {
-  title: "Antigravity 🚀 스타트업 대시보드",
+  title: "웹앱빌더 맛보기 🚀",
   description:
     "아이디어를 입력하면 AI가 나만의 비즈니스 앱을 자동으로 만들어 드립니다. 2시간 완성 비즈니스 앱 관제탑.",
   keywords: ["스타트업", "대시보드", "PWA", "AI", "웹앱 생성기"],
