@@ -21,6 +21,15 @@ function hasProgress(student) {
   );
 }
 
+// '관리자' 계정이 명단에 있으면 맨 위로 올린다 (나머지는 기존 순서 유지 — sort는 안정 정렬)
+function orderStudents(students) {
+  return [...students].sort((a, b) => {
+    if (a.name === "관리자") return -1;
+    if (b.name === "관리자") return 1;
+    return 0;
+  });
+}
+
 // 수강생이 마지막으로 진행했던 단계를 기준으로 재진입 지점을 계산
 function getResumePoint(student) {
   if (!student.antigravity_installed) return { type: "gate", gateStep: "antigravity" };
@@ -234,7 +243,7 @@ export default function Home() {
               <p>명단 불러오는 중...</p>
             ) : (
               <div className="grid grid-cols-1 gap-3">
-                {students.map((student) => {
+                {orderStudents(students).map((student) => {
                   const isDisabled = student.is_active === false;
                   return (
                     <button

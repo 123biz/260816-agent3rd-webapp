@@ -42,6 +42,15 @@ const RING_COLORS = [
   "var(--color-brutal-purple)",
 ];
 
+// '관리자' 계정이 명단에 있으면 맨 위로 올린다 (나머지는 id 정렬 순서 유지 — sort는 안정 정렬)
+function orderStudents(students) {
+  return [...students].sort((a, b) => {
+    if (a.name === "관리자") return -1;
+    if (b.name === "관리자") return 1;
+    return 0;
+  });
+}
+
 // 전체 수강생 기준, 각 단계를 완료한 인원 수/비율로 진행 현황을 보여주는 대시보드
 function StageDashboard({ students }) {
   const total = students.length;
@@ -335,7 +344,7 @@ export default function AdminPage() {
           <p className="font-semibold text-lg">불러오는 중...</p>
         ) : (
           <div className="flex flex-col gap-4">
-            {students.map((student) => (
+            {orderStudents(students).map((student) => (
               <div
                 key={student.id}
                 className={`brutal-card p-5 flex flex-col gap-3 ${
